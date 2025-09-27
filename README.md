@@ -1,5 +1,5 @@
 # DiabetesPrediction System
-This repository contains a web-based Diabetes Prediction System that uses machine learning (Logistic Regression) trained on the Pima Indian Diabetes Dataset.
+This repository contains a web-based Diabetes Prediction System that uses machine learning (Logistic Regression , Random Forest,KNN,SVM) trained on the Pima Indian Diabetes Dataset.
 Users can enter their health parameters (e.g., Glucose, Insulin, BMI, Age, etc.), and the system predicts whether they are likely to have diabetes.
 
 
