@@ -1,0 +1,274 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Diabetes Prediction System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background: linear-gradient(90deg, #0062E6, #33AEFF);
+        }
+        .navbar-brand, .nav-link {
+            color: white !important;
+            font-weight: 500;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #e9ecef !important;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+        }
+        footer {
+            background-color: #212529;
+            color: #ccc;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: auto;
+        }
+        .main-content {
+            min-height: calc(100vh - 200px);
+        }
+        /* back-to-top removed */
+
+        /* Chatbot modern UI */
+        .chatbot-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: 9999px;
+            border: none;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 10px 24px rgba(99,102,241,0.35);
+            transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
+        }
+        .chatbot-button:hover { filter: brightness(1.05); transform: translateY(-1px); box-shadow: 0 14px 28px rgba(99,102,241,0.4); }
+        .chatbot-window {
+            backdrop-filter: blur(10px);
+            background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,255,0.9));
+            border: 1px solid rgba(99,102,241,0.15) !important;
+        }
+        .chatbot-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            padding: 10px 12px;
+            font-weight: 700;
+        }
+        .chatbot-header .title-wrap { display:flex; align-items:center; gap:8px; }
+        .chatbot-header .status-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 0 2px rgba(34,197,94,0.35); }
+        .chatbot-header .controls { display:flex; align-items:center; gap:6px; }
+        .chatbot-header .icon-btn { width:28px; height:28px; border-radius:6px; border:none; background:rgba(255,255,255,0.2); color:#fff; cursor:pointer; }
+        .chatbot-messages { background: #f8fafc; }
+        .message { display:flex; padding: 4px 0; }
+        .message-bubble { border-radius: 16px; padding: 10px 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); word-break: break-word; max-width: 80%; }
+        .message.bot { justify-content: flex-start; }
+        .message.user { justify-content: flex-end; }
+        .message.bot .message-bubble { background: #ffffff; color: #111827; border: 1px solid #e5e7eb; }
+        .message.user .message-bubble { background: #6366f1; color: #ffffff; border: 1px solid rgba(99,102,241,0.2); }
+        .chatbot-input { background: #fff; border-top: 1px solid #eef2f7; }
+        .chatbot-input input { border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; }
+        .chatbot-input button { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 6px 18px rgba(16,185,129,0.35); }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body {% block body_attrs %}{% endblock %}>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'index' %}">Diabetes Prediction</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'home' %}">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'about' %}">About</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'predict' %}">Predict</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'performance' %}">Performance Analysis</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 Diabetes Prediction System | Developed with ❤️ in Django</p>
+    </footer>
+
+    
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+
+    {% block extra_body %}{% endblock %}
+
+    <script>
+        (function(){
+            // Re-enable chatbot on Predict page but avoid form interference
+            try {
+                var path = window.location && window.location.pathname ? window.location.pathname.toLowerCase() : '';
+                // Allow on all pages now
+            } catch(e) {}
+            function mountChatbotIfMissing(){
+                if(document.getElementById('chatbotWindow')){ return; }
+                var container = document.createElement('div');
+                container.className = 'chatbot-container';
+                container.style.position = 'fixed';
+                container.style.bottom = '20px';
+                container.style.right = '20px';
+                container.style.zIndex = '2147483647';
+                container.style.pointerEvents = 'auto';
+                container.innerHTML = ''+
+                    '<div class="chatbot-window" id="chatbotWindow" style="display:none; position:absolute; bottom:80px; right:0; width:380px; max-width:90vw; height:520px; border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,0.25); flex-direction:column; overflow:hidden;">'+
+                        '<div class="chatbot-header">'+
+                            '<div class="title-wrap"><span class="status-dot"><\/span><span> Asha • Diabetes Assistant<\/span><\/div>'+
+                            '<div class="controls">'+
+                                '<button class="icon-btn" onclick="document.getElementById(\'chatbotWindow\').style.height=\'70vh\'">⤢<\/button>'+
+                                '<button class="icon-btn" onclick="toggleChatbot()">✕<\/button>'+
+                            '<\/div>'+
+                        '<\/div>'+
+                        '<div class="chatbot-messages" id="chatbotMessages" style="flex:1; padding:12px; overflow:auto;">'+
+                            '<div class="message bot">'+
+                                '<div class="message-bubble">Hi! I\'m Asha, your diabetes assistant. Ask me about symptoms, prevention, diet, exercise, or how to use the prediction tool.<\/div>'+
+                            '<\/div>'+
+                        '<\/div>'+
+                        '<div class="typing-indicator" id="typingIndicator" style="display:none; padding:0 12px 10px;"><span class="dot"><\/span><span class="dot"><\/span><span class="dot"><\/span><\/div>'+
+                        '<div class="chatbot-input" style="display:flex; gap:8px; padding:10px;">'+
+                            '<input type="text" id="chatbotInput" placeholder="Ask Asha..." maxlength="200" style="flex:1;">'+
+                            '<button onclick="sendMessage()">➤<\/button>'+
+                        '<\/div>'+
+                    '<\/div>'+
+                    '<button class="chatbot-button" onclick="toggleChatbot()" title="Open Asha" style="display:block; position:relative; z-index:2147483647;">🤖 Asha<\/button>';
+                document.body.appendChild(container);
+            }
+
+            if(typeof window.toggleChatbot !== 'function'){
+                window.chatbotOpen = false;
+                window.toggleChatbot = function(){
+                    var win = document.getElementById('chatbotWindow');
+                    window.chatbotOpen = !window.chatbotOpen;
+                    if(win){ win.style.display = window.chatbotOpen ? 'flex' : 'none'; }
+                };
+            }
+            if(typeof window.addMessage !== 'function'){
+                window.addMessage = function(text, sender){
+                    var messages = document.getElementById('chatbotMessages');
+                    if(!messages) return;
+                    var wrapper = document.createElement('div');
+                    wrapper.className = 'message ' + sender;
+                    var bubble = document.createElement('div');
+                    bubble.className = 'message-bubble';
+                    bubble.textContent = text;
+                    wrapper.appendChild(bubble);
+                    messages.appendChild(wrapper);
+                    messages.scrollTop = messages.scrollHeight;
+                };
+            }
+            if(typeof window.getBotResponse !== 'function'){
+                window.getBotResponse = function(message){
+                    var assistantName = 'Asha';
+                    var msg = (message || '').toLowerCase();
+                    var normalized = msg.replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+                    function has(phr){ return normalized.indexOf(phr) !== -1; }
+                    if(/(hello|hi|hey)\b/.test(normalized)) return 'Hi! I\'m '+assistantName+', your diabetes assistant. How can I help?';
+                    if(has('what is diabetes') || has('define diabetes')) return 'Diabetes is a condition where blood glucose stays high because the body cannot produce or use insulin effectively.';
+                    if(has('symptom')) return 'Common symptoms: frequent urination, thirst, fatigue, blurred vision, slow-healing wounds, unexplained weight loss.';
+                    if(has('prevent')) return 'Prevention tips: maintain healthy weight, 150+ min/week exercise, balanced diet, avoid sugary drinks, regular check-ups.';
+                    if(has('diet') || has('food')) return 'Prefer whole grains, vegetables, lean proteins. Limit refined carbs, sugary drinks, deep-fried and processed foods.';
+                    if(has('exercise') || has('workout')) return 'Aim for 150+ min/week of moderate activity plus strength training 2–3 times/week.';
+                    if(has('predict') || has('risk') || has('test')) return 'Use the Predict page to estimate diabetes risk using ML models based on your health inputs.';
+                    return assistantName + ': I can help with symptoms, prevention, diet, exercise, risk checks and how to use the app.';
+                };
+            }
+            if(typeof window.sendMessage !== 'function'){
+                window.sendMessage = function(){
+                    var input = document.getElementById('chatbotInput');
+                    if(!input) return;
+                    var message = (input.value || '').trim();
+                    if(!message) return;
+                    var typing = document.getElementById('typingIndicator');
+                    window.addMessage(message, 'user');
+                    input.value = '';
+                    var reply = window.getBotResponse(message);
+                    if(typing){ typing.style.display = 'block'; }
+                    setTimeout(function(){
+                        if(typing){ typing.style.display = 'none'; }
+                        window.addMessage(reply, 'bot');
+                    }, 500);
+                };
+            }
+
+            function ensureVisible(){
+                var container = document.querySelector('.chatbot-container');
+                var button = container ? container.querySelector('.chatbot-button') : null;
+                if(container){
+                    container.style.position = 'fixed';
+                    container.style.bottom = '20px';
+                    container.style.right = '20px';
+                    container.style.zIndex = '2147483647';
+                    container.style.pointerEvents = 'auto';
+                }
+                if(button){
+                    button.style.display = 'block';
+                    button.style.visibility = 'visible';
+                }
+            }
+
+            if(document.readyState === 'loading'){
+                document.addEventListener('DOMContentLoaded', function(){
+                    mountChatbotIfMissing();
+                    ensureVisible();
+                    var inputEl = document.getElementById('chatbotInput');
+                    if(inputEl){ inputEl.addEventListener('keypress', function(e){ if(e.key === 'Enter') window.sendMessage(); }); }
+                });
+            } else {
+                mountChatbotIfMissing();
+                ensureVisible();
+                var inputEl = document.getElementById('chatbotInput');
+                if(inputEl){ inputEl.addEventListener('keypress', function(e){ if(e.key === 'Enter') window.sendMessage(); }); }
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Welcome - Diabetes Prediction System{% endblock %}
+
+{% block extra_css %}
+<style>
+	/* Full-bleed hero */
+	.hero-landing {
+		position: relative;
+		min-height: calc(100vh - 200px);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: radial-gradient(1200px 600px at 10% 10%, rgba(59,130,246,.25), transparent 40%),
+			radial-gradient(900px 450px at 90% 20%, rgba(16,185,129,.22), transparent 40%),
+			linear-gradient(135deg, #ecfeff 0%, #eef2ff 100%);
+		overflow: hidden;
+	}
+	/* Background photo with subtle overlay */
+	.hero-landing::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: url('{% static "DiabetesPrediction/images/img3.jpg" %}') center/cover no-repeat fixed;
+		opacity: 0.22;
+	}
+	/* Floating shapes */
+	.float-shape {
+		position: absolute;
+		border-radius: 32px;
+		filter: blur(20px);
+		opacity: .35;
+		animation: float 14s ease-in-out infinite;
+	}
+	.shape-1 { width: 180px; height: 180px; background: #bae6fd; top: 8%; left: 6%; animation-delay: 0s; }
+	.shape-2 { width: 220px; height: 140px; background: #bbf7d0; bottom: 12%; right: 10%; animation-delay: 3s; }
+	.shape-3 { width: 140px; height: 220px; background: #ddd6fe; top: 28%; right: 24%; animation-delay: 6s; }
+	@keyframes float { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-14px) } }
+
+	/* Glass card */
+	.glass {
+		position: relative;
+		background: rgba(255,255,255,.82);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		border: 1px solid rgba(255,255,255,.45);
+		box-shadow: 0 20px 50px rgba(2,6,23,.12);
+		border-radius: 24px;
+	}
+	.gradient-text {
+		background: linear-gradient(90deg, #06b6d4, #3b82f6 60%, #8b5cf6);
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+	}
+	.lead-muted { color: #475569; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero-landing">
+	<span class="float-shape shape-1"></span>
+	<span class="float-shape shape-2"></span>
+	<span class="float-shape shape-3"></span>
+	<div class="container position-relative">
+		<div class="row justify-content-center">
+			<div class="col-12 col-lg-9">
+				<div class="glass p-5 p-lg-6 text-center">
+					<h1 class="display-5 fw-bold mb-3 gradient-text">Welcome to Diabetes Prediction System</h1>
+					<p class="lead lead-muted mb-0">Estimate diabetes risk using clinically relevant health indicators. This tool is designed for awareness and education.</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+{% endblock %}
+
+

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Performance Analysis - Diabetes Prediction{% endblock %}
+
+{% block extra_css %}
+<style>
+	/* Chatbot styles (local to this page) */
+	.chatbot-container { position: fixed; bottom: 20px; right: 20px; z-index: 2147483000; }
+	.chatbot-button { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; font-size: 24px; cursor: pointer; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); transition: all 0.3s ease; display: block; }
+	.chatbot-button:hover { transform: scale(1.1); box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6); }
+	.chatbot-window { position: absolute; bottom: 80px; right: 0; width: 350px; height: 500px; background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; }
+	.chatbot-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; text-align: center; font-weight: 600; }
+	.chatbot-messages { flex: 1; padding: 15px; overflow-y: auto; max-height: 350px; }
+	.message { margin-bottom: 15px; }
+	.message.bot { text-align: left; }
+	.message.user { text-align: right; }
+	.message-bubble { display: inline-block; padding: 10px 15px; border-radius: 18px; max-width: 80%; word-wrap: break-word; }
+	.message.bot .message-bubble { background: #f1f3f4; color: #333; }
+	.message.user .message-bubble { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+	.chatbot-input { display: flex; padding: 15px; border-top: 1px solid #eee; }
+	.chatbot-input input { flex: 1; border: 1px solid #ddd; border-radius: 20px; padding: 10px 15px; outline: none; }
+	.chatbot-input button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; margin-left: 10px; cursor: pointer; }
+	.typing-indicator { display: none; }
+	.typing-indicator .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #999; margin: 0 2px; animation: typing 1.4s infinite; }
+	.typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+	.typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+	@keyframes typing { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-10px); } }
+	.performance-analysis-section {
+		background: #ffffff;
+		min-height: 100vh;
+		position: relative;
+		z-index: 1000;
+		display: block;
+	}
+	.metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+	.metric-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #007bff; }
+	.metric-label { font-weight: 500; color: #495057; font-size: 0.9rem; }
+	.metric-value { font-weight: 700; color: #212529; font-size: 1rem; }
+	.confusion-matrix { display: flex; justify-content: center; align-items: center; min-height: 250px; }
+	.algorithms-overview .card { border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+	.metric-card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; border: 1px solid #e9ecef; }
+	.metric-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+	.metric-value { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+	.metric-label { font-size: 0.875rem; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; }
+	.chart-container { position: relative; height: 300px; width: 100%; }
+	.performance-analysis-section .card { border: none; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); border-radius: 15px; overflow: hidden; }
+	.performance-analysis-section .card-header { border-bottom: 2px solid rgba(255, 255, 255, 0.2); padding: 1.5rem; }
+	.performance-analysis-section .card-body { padding: 2rem; }
+	.algorithm-card .card { transition: all 0.3s ease; border: 2px solid transparent; }
+	.algorithm-card .card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); border-color: rgba(0, 123, 255, 0.3); }
+	.confusion-matrix-container { background: #f8f9fa; border-radius: 10px; padding: 1rem; }
+	.cm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 320px; margin: auto; }
+	.cm-box { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); font-weight: 600; }
+	.cm-box .cm-label { display:block; font-weight: 500; color:#334155; margin-bottom:4px; }
+	.cm-box .cm-value { font-size: 1.25rem; color:#111827; }
+	.cm-box.tn { background: linear-gradient(135deg, #e6f4ea, #d1f7df); border-color:#b7ebc6; }
+	.cm-box.fp { background: linear-gradient(135deg, #ffe5e7, #ffd1d6); border-color:#ffb3bb; }
+	.cm-box.fn { background: linear-gradient(135deg, #fff3cd, #ffe8a1); border-color:#ffe08a; }
+	.cm-box.tp { background: linear-gradient(135deg, #e7efff, #d5e4ff); border-color:#b8d0ff; }
+	.theme-knn .card-header { background: linear-gradient(135deg, #0ea5e9, #2563eb); color:#fff; }
+	.theme-rf .card-header { background: linear-gradient(135deg, #10b981, #198754); color:#fff; }
+	.theme-svm .card-header { background: linear-gradient(135deg, #a855f7, #6f42c1); color:#fff; }
+	.theme-lr .card-header { background: linear-gradient(135deg, #fdba74, #fd7e14); color:#fff; }
+	.roc-curve-container { background: #f8f9fa; border-radius: 10px; padding: 1rem; }
+	.analysis-card { background: radial-gradient(1200px 500px at 10% 0%, rgba(56,189,248,0.25), transparent 40%), linear-gradient(135deg, #1f2937 0%, #334155 100%); color: #f8fafc; border-radius: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
+	.analysis-card .card-header { background: transparent; border-bottom: none; text-align: center; padding-top: 1.75rem; padding-bottom: 0.5rem; }
+	.analysis-card .card-header strong { font-size: 1.75rem; }
+	.analysis-card .card-body { color: #e5e7eb; }
+	.metrics-list li { margin-bottom: 4px; }
+	.metrics-list strong { color: #ffffff; }
+	.visual-box { background: #ffffff; border-radius: 14px; box-shadow: 0 10px 24px rgba(0,0,0,0.15); padding: 12px; }
+	@media (max-width: 768px) { .metrics-grid { grid-template-columns: 1fr; } .metric-item { padding: 6px 10px; } .algorithm-badge { padding: 10px; margin-bottom: 15px; } .algorithm-badge i { font-size: 1.5rem; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="performance-analysis-section">
+	<div class="container py-5">
+		<div class="performance-header mb-4">
+			<h2 class="text-center mb-3">Project Performance Analysis</h2>
+			<p class="text-center text-muted">Overall performance metrics and analysis of our diabetes prediction system</p>
+		</div>
+
+		<!-- Reuse the same content from home performance section -->
+		{% include 'performance_section_inner.html' %}
+	</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+	function createRocChart(canvasId, label, points, auc, color){
+		const el = document.getElementById(canvasId);
+		if(!el){ return; }
+		const ctx = el.getContext('2d');
+		new Chart(ctx, {
+			type: 'line',
+			data: { labels: points.map(p=>p[0]), datasets: [
+				{ label, data: points.map(p=>({x:p[0], y:p[1]})), parsing:false, borderColor: color, backgroundColor: color.replace(')',',0.15)').replace('rgb','rgba'), fill: true, tension: 0.25 },
+				{ label: 'Random Guess', data: [{x:0,y:0},{x:1,y:1}], parsing:false, borderColor: '#6c757d', borderDash:[6,6], pointRadius:0 }
+			] },
+			options: { responsive: true, plugins: { legend: { position: 'bottom' }, title: { display: true, text: `AUC: ${auc}` } }, scales: { x: { type: 'linear', min:0, max:1, title:{display:true, text:'False Positive Rate'} }, y:{ min:0, max:1, title:{display:true, text:'True Positive Rate'} } } }
+		});
+	}
+
+	createRocChart('knnRocFull', 'KNN', [ [0,0], [0.05,0.62], [0.1,0.78], [0.2,0.86], [0.35,0.91], [1,1] ], '0.842', 'rgb(13,110,253)');
+	createRocChart('rfRocFull', 'Random Forest', [ [0,0], [0.06,0.58], [0.12,0.74], [0.22,0.82], [0.38,0.88], [1,1] ], '0.821', 'rgb(25,135,84)');
+	createRocChart('svmRocFull', 'SVM', [ [0,0], [0.08,0.54], [0.15,0.69], [0.28,0.78], [0.45,0.84], [1,1] ], '0.798', 'rgb(111,66,193)');
+	createRocChart('lrRocFull', 'Logistic Regression', [ [0,0], [0.1,0.5], [0.2,0.64], [0.33,0.73], [0.5,0.8], [1,1] ], '0.763', 'rgb(253,126,20)');
+});
+</script>
+{% endblock %}
+
+

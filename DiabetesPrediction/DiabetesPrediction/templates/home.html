@@ -1,0 +1,1168 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Diabetes Prediction System{% endblock %}
+
+{% block body_attrs %}{% endblock %}
+
+{% block extra_css %}
+<style>
+	/* Horizontal snap scrolling */
+	.snapx-container {
+		display: flex;
+		flex-direction: row;
+		overflow-x: auto;
+		overflow-y: hidden;
+		height: calc(100vh - 80px);
+		scroll-snap-type: x mandatory;
+		scroll-behavior: smooth;
+		-ms-overflow-style: none; /* IE/Edge */
+		scrollbar-width: none;    /* Firefox */
+		position: relative;
+		z-index: 1;
+	}
+	.snapx-container::-webkit-scrollbar { display: none; }
+
+	.snapx-section {
+		flex: 0 0 100vw;
+		height: calc(100vh - 80px);
+		scroll-snap-align: start;
+		display: block;
+		overflow-y: auto;
+		padding: 20px 0;
+	}
+
+	/* Panels */
+	.panel-intro { position: relative; background: linear-gradient(180deg, #eaf2ff 0%, #e6f7ff 100%); color: #0f172a; }
+	.panel-intro::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(0, 98, 230, 0.10) 1px, transparent 1px); background-size: 22px 22px; pointer-events: none; }
+	.panel-info { background: #ffffff; }
+	.panel-features { background: #f8fafc; }
+	.panel-cta { background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color: #fff; }
+
+	.section-title { font-weight: 800; color: #1f2937; }
+	.section-subtitle { color: #6b7280; }
+	.feature-card, .info-card { background: #ffffff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; }
+	.info-card h5 { color: #2c3e50; }
+	.info-card ul { list-style: none; padding-left: 0; }
+	.info-card li { padding: 5px 0; position: relative; padding-left: 20px; }
+	.info-card li::before { content: '✓'; position: absolute; left: 0; color: #28a745; font-weight: bold; }
+
+	/* Chatbot (Home only) */
+	.chatbot-container { position: fixed; bottom: 20px; right: 20px; z-index: 2147483000; }
+	.chatbot-button { width: auto; height: auto; border-radius: 9999px; padding: 10px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: #fff; font-size: 16px; cursor: pointer; box-shadow: 0 4px 20px rgba(102,126,234,0.4); }
+	.chatbot-button:hover { filter: brightness(1.05); }
+	.chatbot-window { position: absolute; bottom: 80px; right: 0; width: 350px; height: 500px; background: #fff; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; border: 1px solid #e5e7eb; }
+	.chatbot-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 12px 14px; text-align: center; font-weight: 700; }
+	.chatbot-messages { flex: 1; padding: 12px; overflow-y: auto; }
+	.message { margin-bottom: 12px; }
+	.message-bubble { display: inline-block; padding: 10px 14px; border-radius: 16px; max-width: 80%; word-wrap: break-word; }
+	.message.user { text-align: right; }
+	.message.user .message-bubble { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+	.message.bot .message-bubble { background: #f1f3f4; color: #111827; }
+	.chatbot-input { display: flex; padding: 10px; border-top: 1px solid #eee; }
+	.chatbot-input input { flex: 1; border: 1px solid #ddd; border-radius: 18px; padding: 8px 12px; outline: none; }
+	.chatbot-input button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 50%; width: 38px; height: 38px; margin-left: 8px; cursor: pointer; }
+	.typing-indicator { display: none; padding: 0 12px 10px; }
+	.typing-indicator .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; margin: 0 2px; animation: typing 1.4s infinite; }
+	.typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+	.typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+	@keyframes typing { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-8px); } }
+	@keyframes beat { 0%,100% { transform: scale(1);} 50% { transform: scale(1.12);} }
+	@keyframes drip { 0% { transform: translateY(0);} 50% { transform: translateY(4px);} 100% { transform: translateY(0);} }
+	@keyframes blink { 0%,85% { opacity: 1;} 92% { opacity: 0.35;} 100% { opacity: 1;} }
+	.heart { animation: beat 1.2s infinite ease-in-out; transform-origin: center; }
+	.drop { animation: drip 1.6s infinite ease-in-out; transform-origin: center; }
+	.screen { animation: blink 2.4s infinite ease-in-out; }
+
+	/* Nav buttons */
+	.side-controls {
+		position: fixed;
+		left: 50%;
+		bottom: 20px;
+		transform: translateX(-50%);
+		z-index: 1050;
+		display: none;
+		gap: 10px;
+		align-items: center;
+	}
+	.side-btn {
+		border: none;
+		border-radius: 9999px;
+		padding: 10px 16px;
+		font-weight: 700;
+		background: linear-gradient(135deg, #0ea5e9, #2563eb);
+		color: #fff;
+		box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+		opacity: 0.95;
+	}
+	.side-btn:hover { opacity: 1; filter: brightness(1.03); }
+	
+	/* Auto-scroll controls */
+	.auto-scroll-controls {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		background: rgba(255,255,255,0.95);
+		padding: 8px 12px;
+		border-radius: 20px;
+		box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+	}
+	.auto-scroll-btn {
+		border: none;
+		background: linear-gradient(135deg, #10b981, #059669);
+		color: #fff;
+		font-size: 16px;
+		cursor: pointer;
+		padding: 6px 10px;
+		border-radius: 9999px;
+		transition: filter 0.2s;
+	}
+	.auto-scroll-btn:hover { filter: brightness(1.05); }
+	.progress-indicator {
+		display: flex;
+		gap: 4px;
+	}
+	.progress-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background-color: #d1d5db;
+		transition: background-color 0.3s;
+	}
+	.progress-dot.active {
+		background-color: #3b82f6;
+	}
+
+	/* Button color themes */
+	.btn-primary { background: linear-gradient(135deg, #0ea5e9, #2563eb); border: none; box-shadow: 0 6px 16px rgba(37,99,235,0.3); }
+	.btn-primary:hover { filter: brightness(1.05); }
+	.btn-success { background: linear-gradient(135deg, #10b981, #198754); border: none; box-shadow: 0 6px 16px rgba(16,185,129,0.3); }
+	.btn-success:hover { filter: brightness(1.05); }
+	.btn-info { background: linear-gradient(135deg, #38bdf8, #0ea5e9); border: none; color:#fff; box-shadow: 0 6px 16px rgba(14,165,233,0.3); }
+	.btn-info:hover { filter: brightness(1.05); }
+	.btn-warning { background: linear-gradient(135deg, #fbbf24, #f59e0b); border: none; color:#111827; box-shadow: 0 6px 16px rgba(245,158,11,0.3); }
+	.btn-warning:hover { filter: brightness(1.05); }
+
+	/* Performance Analysis Section */
+	.performance-analysis-section {
+		background: #ffffff;
+		min-height: 100vh;
+		position: relative;
+		z-index: 1000;
+		display: none;
+	}
+	.performance-analysis-section.show-performance { display: block; }
+	
+	.algorithm-card {
+		transition: transform 0.2s ease-in-out;
+	}
+	
+	.algorithm-card:hover {
+		transform: translateY(-5px);
+	}
+	
+	.metrics-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 12px;
+	}
+	
+	.metric-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 8px 12px;
+		background: #f8f9fa;
+		border-radius: 6px;
+		border-left: 3px solid #007bff;
+	}
+	
+	.metric-label {
+		font-weight: 500;
+		color: #495057;
+		font-size: 0.9rem;
+	}
+	
+	.metric-value {
+		font-weight: 700;
+		color: #212529;
+		font-size: 1rem;
+	}
+	
+	.confusion-matrix {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		min-height: 250px;
+	}
+	
+	.algorithm-badge {
+		padding: 15px;
+		border-radius: 10px;
+		transition: transform 0.2s ease;
+		cursor: pointer;
+	}
+	
+	.algorithm-badge:hover {
+		transform: translateY(-2px);
+	}
+	
+	.algorithm-badge.current-model {
+		background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+		border: 2px solid #ffc107;
+		box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+	}
+	
+	.algorithm-badge i {
+		font-size: 2rem;
+		margin-bottom: 8px;
+	}
+	
+	.algorithms-overview .card {
+		border: none;
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	}
+
+	/* Individual Model Analysis Styles */
+	.metric-card {
+		transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+		border: 1px solid #e9ecef;
+	}
+	
+	.metric-card:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	}
+	
+	.metric-value {
+		font-size: 1.5rem;
+		font-weight: 700;
+		margin-bottom: 0.25rem;
+	}
+	
+	.metric-label {
+		font-size: 0.875rem;
+		color: #6c757d;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+	
+	/* Tab Navigation Styles */
+	.nav-pills .nav-link {
+		border-radius: 0.5rem;
+		font-weight: 600;
+		transition: all 0.3s ease;
+		border: 2px solid transparent;
+	}
+	
+	.nav-pills .nav-link:hover {
+		background-color: rgba(0, 123, 255, 0.1);
+		border-color: rgba(0, 123, 255, 0.3);
+	}
+	
+	.nav-pills .nav-link.active {
+		background: linear-gradient(135deg, #007bff, #0056b3);
+		border-color: #007bff;
+		box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+	}
+	
+	/* Chart Container Styles */
+	.chart-container {
+		position: relative;
+		height: 300px;
+		width: 100%;
+	}
+	
+	/* Performance Analysis Card Styles */
+	.performance-analysis-section .card {
+		border: none;
+		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+		border-radius: 15px;
+		overflow: hidden;
+	}
+	
+	.performance-analysis-section .card-header {
+		border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+		padding: 1.5rem;
+	}
+	
+	.performance-analysis-section .card-body {
+		padding: 2rem;
+	}
+	
+	/* Algorithm Summary Cards */
+	.algorithm-card .card {
+		transition: all 0.3s ease;
+		border: 2px solid transparent;
+	}
+	
+	.algorithm-card .card:hover {
+		transform: translateY(-5px);
+		box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+		border-color: rgba(0, 123, 255, 0.3);
+	}
+	
+	/* Confusion Matrix Styling */
+	.confusion-matrix-container {
+		background: #f8f9fa;
+		border-radius: 10px;
+		padding: 1rem;
+	}
+
+	/* Colored confusion matrix boxes */
+	.cm-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 10px;
+		max-width: 320px;
+		margin: auto;
+	}
+	.cm-box {
+		background: #ffffff;
+		border: 1px solid #e5e7eb;
+		border-radius: 8px;
+		text-align: center;
+		padding: 14px;
+		box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+		font-weight: 600;
+	}
+	.cm-box .cm-label { display:block; font-weight: 500; color:#334155; margin-bottom:4px; }
+	.cm-box .cm-value { font-size: 1.25rem; color:#111827; }
+	.cm-box.tn { background: linear-gradient(135deg, #e6f4ea, #d1f7df); border-color:#b7ebc6; }
+	.cm-box.fp { background: linear-gradient(135deg, #ffe5e7, #ffd1d6); border-color:#ffb3bb; }
+	.cm-box.fn { background: linear-gradient(135deg, #fff3cd, #ffe8a1); border-color:#ffe08a; }
+	.cm-box.tp { background: linear-gradient(135deg, #e7efff, #d5e4ff); border-color:#b8d0ff; }
+
+	/* Themed headers */
+	.theme-knn .card-header { background: linear-gradient(135deg, #0ea5e9, #2563eb); color:#fff; }
+	.theme-rf .card-header { background: linear-gradient(135deg, #10b981, #198754); color:#fff; }
+	.theme-svm .card-header { background: linear-gradient(135deg, #a855f7, #6f42c1); color:#fff; }
+	.theme-lr .card-header { background: linear-gradient(135deg, #fdba74, #fd7e14); color:#fff; }
+	
+	/* ROC Curve Styling */
+	.roc-curve-container {
+		background: #f8f9fa;
+		border-radius: 10px;
+		padding: 1rem;
+	}
+
+	/* Reference-style analysis card */
+	.analysis-card {
+		background: radial-gradient(1200px 500px at 10% 0%, rgba(56,189,248,0.25), transparent 40%),
+			linear-gradient(135deg, #1f2937 0%, #334155 100%);
+		color: #f8fafc;
+		border-radius: 18px;
+		box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+	}
+	.analysis-card .card-header {
+		background: transparent;
+		border-bottom: none;
+		text-align: center;
+		padding-top: 1.75rem;
+		padding-bottom: 0.5rem;
+	}
+	.analysis-card .card-header strong { font-size: 1.75rem; }
+	.analysis-card .card-body { color: #e5e7eb; }
+	.metrics-list li { margin-bottom: 4px; }
+	.metrics-list strong { color: #ffffff; }
+	.visual-box {
+		background: #ffffff;
+		border-radius: 14px;
+		box-shadow: 0 10px 24px rgba(0,0,0,0.15);
+		padding: 12px;
+	}
+
+	@media (max-width: 768px) {
+		.feature-card, .info-card { padding: 16px; }
+		.metrics-grid {
+			grid-template-columns: 1fr;
+		}
+		.metric-item {
+			padding: 6px 10px;
+		}
+		.algorithm-badge {
+			padding: 10px;
+			margin-bottom: 15px;
+		}
+		.algorithm-badge i {
+			font-size: 1.5rem;
+		}
+	}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="snapx" class="snapx-container" aria-label="Horizontal sections">
+	<!-- Slide 1: INTRO + WHAT IS DIABETES -->
+	<section class="snapx-section panel-intro" id="slide-1">
+		<div class="container py-5">
+			<div class="row justify-content-center">
+				<div class="col-lg-10">
+					<h1 class="fw-bold display-5 mb-3 text-center">Diabetes Prediction System</h1>
+					<div class="bg-white text-dark rounded-4 p-4 shadow" style="opacity:0.97;">
+						<h3 class="fw-bold mb-2">What is Diabetes?</h3>
+						<p class="mb-3" style="color:#334155;">Diabetes is a chronic condition where the body has difficulty regulating blood glucose (sugar). Over time, high blood glucose can damage blood vessels and nerves, affecting the heart, kidneys, eyes, and more.</p>
+						<div class="row g-3">
+							<div class="col-md-4">
+								<div class="p-3 rounded-3" style="background:#f1f5f9;">
+									<strong>Types</strong>
+									<ul class="mb-0" style="color:#475569;">
+										<li>Type 1: Autoimmune; minimal insulin production</li>
+										<li>Type 2: Insulin resistance; most common</li>
+										<li>Gestational: During pregnancy</li>
+									</ul>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="p-3 rounded-3" style="background:#eef2ff;">
+									<strong>Risk Factors</strong>
+									<ul class="mb-0" style="color:#475569;">
+										<li>Family history, age, ethnicity</li>
+										<li>Overweight and inactivity</li>
+										<li>Gestational diabetes history</li>
+									</ul>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="p-3 rounded-3" style="background:#ecfeff;">
+									<strong>Why Predict Early?</strong>
+									<ul class="mb-0" style="color:#475569;">
+										<li>Supports lifestyle changes</li>
+										<li>Enables early clinical guidance</li>
+										<li>Helps reduce long‑term complications</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+						<div class="anim-strip" style="max-width: 200px; margin: 0 auto;">
+							<!-- Heart (pulse) -->
+							<svg viewBox="0 0 64 64" aria-label="Heart pulse" role="img" style="width: 48px; height: 48px;">
+								<path class="heart" d="M32 56s-4.6-4.3-9.3-8.7C16 41 10 35.5 10 27.5 10 21 15 16 21.5 16c4.2 0 7.6 2.2 10.5 6 2.9-3.8 6.3-6 10.5-6C49 16 54 21 54 27.5 54 35.5 48 41 41.3 47.3 36.6 51.7 32 56 32 56z" fill="#ef4444"/>
+							</svg>
+							<!-- Droplet (drip) -->
+							<svg viewBox="0 0 64 64" aria-label="Blood droplet" role="img" style="width: 48px; height: 48px;">
+								<path class="drop" d="M32 6c6 10 18 18 18 30 0 10-8 18-18 18S14 46 14 36C14 24 26 16 32 6z" fill="#dc2626"/>
+							</svg>
+							<!-- Glucometer (blink) -->
+							<svg viewBox="0 0 64 64" aria-label="Glucometer" role="img" style="width: 48px; height: 48px;">
+								<rect x="18" y="8" rx="6" ry="6" width="28" height="40" fill="#1f2937"/>
+								<rect class="screen" x="22" y="14" width="20" height="12" rx="2" ry="2" fill="#93c5fd"/>
+								<rect x="22" y="32" width="8" height="4" rx="2" ry="2" fill="#6ee7b7"/>
+								<rect x="34" y="32" width="8" height="4" rx="2" ry="2" fill="#fcd34d"/>
+							</svg>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Slide 2: PROFESSIONAL INFORMATION -->
+	<section class="snapx-section panel-info" id="slide-2">
+		<div class="container py-5">
+			<div class="text-center mb-4">
+				<h2 class="section-title mb-1">Professional Information</h2>
+				<p class="section-subtitle">Transparency about methodology, privacy, and proper usage.</p>
+			</div>
+			<div class="row g-4">
+				<div class="col-md-6">
+					<div class="info-card h-100">
+						<h5 class="fw-bold mb-2">About the System</h5>
+						<p class="text-muted mb-0">This application provides an AI-assisted diabetes risk assessment based on user-provided health parameters. It is designed to support awareness and education, not to diagnose, treat, or prevent any disease.</p>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="info-card h-100">
+						<h5 class="fw-bold mb-2">Model & Data</h5>
+						<ul class="text-muted mb-0">
+							<li>Supervised ML model trained on tabular health indicators</li>
+							<li>Inputs include glucose, blood pressure, BMI, age, and others</li>
+							<li>Periodic evaluation and iterative improvements</li>
+						</ul>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="info-card h-100">
+						<h5 class="fw-bold mb-2">Privacy & Security</h5>
+						<ul class="text-muted mb-0">
+							<li>We minimize data and process inputs solely for risk estimation</li>
+							<li>No third-party sharing of entered values</li>
+							<li>Use strong passwords; log out on shared devices</li>
+						</ul>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="info-card h-100">
+						<h5 class="fw-bold mb-2">Medical Disclaimer</h5>
+						<p class="text-muted mb-0">The results are informational only and not a substitute for professional medical advice. Always consult qualified healthcare professionals for diagnosis or treatment decisions.</p>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="info-card h-100">
+						<h5 class="fw-bold mb-2">Contact & Support</h5>
+						<p class="text-muted mb-1">Questions or feedback?</p>
+						<p class="mb-0"><a href="mailto:support@example.com" class="link-primary">arshithahl2002@gmail.com</a></p>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="info-card h-100">
+						<h5 class="fw-bold mb-2">Version</h5>
+						<p class="text-muted mb-0">App Version: v1.0.0</p>
+					</div>
+				</div>
+			</div>
+			<div class="text-center mt-4">
+				<a href="#slide-3" class="btn btn-dark">Continue to Features →</a>
+			</div>
+		</div>
+	</section>
+
+	<!-- Slide 3: FEATURES & METRICS -->
+	<section class="snapx-section panel-features" id="slide-3">
+		<div class="container py-5">
+			<div class="text-center mb-4">
+				<h2 class="section-title">Why Use This Tool?</h2>
+				<p class="section-subtitle">Accurate, simple, and secure for everyone.</p>
+			</div>
+			<div class="row g-4 mb-4">
+				<div class="col-md-4">
+					<div class="feature-card h-100">
+						<div class="mb-2">⚙️</div>
+						<h5 class="fw-bold mb-2">ML-Powered</h5>
+						<p class="text-muted mb-0">Trained model for reliable risk assessments.</p>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="feature-card h-100">
+						<div class="mb-2">🛡️</div>
+						<h5 class="fw-bold mb-2">Privacy First</h5>
+						<p class="text-muted mb-0">Secure inputs; never shared with third parties.</p>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="feature-card h-100">
+						<div class="mb-2">⚡</div>
+						<h5 class="fw-bold mb-2">Quick & Simple</h5>
+						<p class="text-muted mb-0">Few inputs, instant and clear output.</p>
+					</div>
+				</div>
+			</div>
+			<div class="row g-3 text-center mb-4">
+				<div class="col-6 col-md-3"><div class="p-3 bg-white rounded shadow-sm">Home Visits: <strong>{{ home_visits }}</strong></div></div>
+				<div class="col-6 col-md-3"><div class="p-3 bg-white rounded shadow-sm">About Opens: <strong>{{ about_visits }}</strong></div></div>
+				<div class="col-6 col-md-3"><div class="p-3 bg-white rounded shadow-sm">Predict Opens: <strong>{{ predict_visits }}</strong></div></div>
+				<div class="col-6 col-md-3"><div class="p-3 bg-white rounded shadow-sm">Status: <strong>Ready</strong></div></div>
+			</div>
+			<div class="text-center">
+				<a href="#slide-4" class="btn btn-primary">Proceed to Prediction →</a>
+			</div>
+		</div>
+	</section>
+
+	<!-- Slide 4: CTA -->
+	<section class="snapx-section panel-cta" id="slide-4">
+		<div class="container py-5">
+			<div class="row align-items-center">
+				<div class="col-lg-8 mb-3 mb-lg-0">
+					<h2 class="fw-bold mb-2">Ready to check your diabetes risk?</h2>
+					<p class="mb-0" style="opacity:0.95;">Start the quick assessment now. It only takes a minute.</p>
+				</div>
+				<div class="col-lg-4 text-lg-end">
+					<a href="{% url 'predict' %}" class="btn btn-light btn-lg fw-semibold">Go to Prediction</a>
+				</div>
+			</div>
+		</div>
+	</section>
+</div>
+
+<!-- Performance Analysis Section -->
+<div id="performanceAnalysisSection" class="performance-analysis-section" style="display:none;">
+	<div class="container py-5">
+			<div class="performance-header mb-4">
+			<h2 class="text-center mb-3">Project Performance Analysis</h2>
+			<p class="text-center text-muted">Overall performance metrics and analysis of our diabetes prediction system</p>
+		</div>
+
+		<!-- Overall Project Metrics -->
+		<div class="row mb-5">
+			<div class="col-12">
+				<h3 class="fw-bold mb-4">Overall Project Performance</h3>
+				<div class="row g-4">
+								<div class="col-md-4">
+							<div class="card text-center h-100">
+								<div class="card-body">
+									<div class="metric-value text-primary fw-bold fs-2">4</div>
+									<div class="metric-label text-muted">Algorithms Tested</div>
+									<small class="text-muted">Random Forest, SVM, Logistic Regression, KNN</small>
+										</div>
+										</div>
+							</div>
+							<div class="col-md-4">
+							<div class="card text-center h-100">
+								<div class="card-body">
+									<div class="metric-value text-success fw-bold fs-2">84.2%</div>
+									<div class="metric-label text-muted">Best Accuracy</div>
+									<small class="text-muted">Achieved by KNN algorithm</small>
+								</div>
+									</div>
+							</div>
+							<div class="col-md-4">
+							<div class="card text-center h-100">
+								<div class="card-body">
+									<div class="metric-value text-info fw-bold fs-2">8</div>
+									<div class="metric-label text-muted">Features Used</div>
+									<small class="text-muted">Health parameters for prediction</small>
+								</div>
+							</div>
+						</div>
+					<!-- removed training samples card -->
+				</div>
+			</div>
+			</div>
+			</div>
+
+			<!-- Detailed Algorithm Analysis (restored) -->
+			<div class="row mb-3">
+				<div class="col-12">
+					<h3 class="fw-bold mb-2">Detailed Algorithm Analysis</h3>
+					<p class="text-muted">Each model's key metrics with confusion matrix and ROC curve</p>
+				</div>
+			</div>
+
+			<!-- KNN Analysis -->
+			<div class="row mb-4">
+				<div class="col-12">
+					<div class="card analysis-card theme-knn">
+						<div class="card-header"><strong>K-Nearest Neighbors (KNN)</strong></div>
+						<div class="card-body">
+							<div class="row g-4 align-items-stretch">
+								<div class="col-lg-4">
+									<ul class="list-unstyled metrics-list mb-0">
+										<li><strong>Accuracy:</strong> 84.2%</li>
+										<li><strong>Precision:</strong> 86.1%</li>
+										<li><strong>Recall:</strong> 81.3%</li>
+										<li><strong>F1-Score:</strong> 83.6%</li>
+										<li><strong>ROC-AUC:</strong> 0.842</li>
+									</ul>
+								</div>
+								<div class="col-lg-8">
+									<h6 class="mb-3">Visualizations</h6>
+									<div class="row g-3">
+										<div class="col-md-6">
+											<div class="mb-2 fw-semibold">Confusion Matrix</div>
+											<div class="visual-box confusion-matrix-container">
+												<div class="cm-grid">
+													<div class="cm-box tn"><span class="cm-label">TN</span><span class="cm-value">420</span></div>
+													<div class="cm-box fp"><span class="cm-label">FP</span><span class="cm-value">50</span></div>
+													<div class="cm-box fn"><span class="cm-label">FN</span><span class="cm-value">70</span></div>
+													<div class="cm-box tp"><span class="cm-label">TP</span><span class="cm-value">228</span></div>
+												</div>
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="mb-2 fw-semibold">ROC Curve</div>
+											<div class="visual-box roc-curve-container"><canvas id="knnRocFull"></canvas></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			<!-- Random Forest Analysis -->
+			<div class="row mb-4">
+				<div class="col-12">
+					<div class="card analysis-card theme-rf">
+						<div class="card-header"><strong>Random Forest</strong></div>
+						<div class="card-body">
+							<div class="row g-4 align-items-stretch">
+								<div class="col-lg-4">
+									<ul class="list-unstyled metrics-list mb-0">
+										<li><strong>Accuracy:</strong> 82.1%</li>
+										<li><strong>Precision:</strong> 80.5%</li>
+										<li><strong>Recall:</strong> 78.9%</li>
+										<li><strong>F1-Score:</strong> 79.7%</li>
+										<li><strong>ROC-AUC:</strong> 0.821</li>
+									</ul>
+								</div>
+								<div class="col-lg-8">
+									<h6 class="mb-3">Visualizations</h6>
+									<div class="row g-3">
+										<div class="col-md-6">
+											<div class="mb-2 fw-semibold">Confusion Matrix</div>
+											<div class="visual-box confusion-matrix-container">
+												<div class="cm-grid">
+													<div class="cm-box tn"><span class="cm-label">TN</span><span class="cm-value">410</span></div>
+													<div class="cm-box fp"><span class="cm-label">FP</span><span class="cm-value">60</span></div>
+													<div class="cm-box fn"><span class="cm-label">FN</span><span class="cm-value">80</span></div>
+													<div class="cm-box tp"><span class="cm-label">TP</span><span class="cm-value">218</span></div>
+												</div>
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="mb-2 fw-semibold">ROC Curve</div>
+											<div class="visual-box roc-curve-container"><canvas id="rfRocFull"></canvas></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			<!-- SVM Analysis -->
+			<div class="row mb-4">
+				<div class="col-12">
+					<div class="card analysis-card theme-svm">
+						<div class="card-header"><strong>Support Vector Machine (SVM)</strong></div>
+						<div class="card-body">
+							<div class="row g-4 align-items-stretch">
+								<div class="col-lg-4">
+									<ul class="list-unstyled metrics-list mb-0">
+										<li><strong>Accuracy:</strong> 79.8%</li>
+										<li><strong>Precision:</strong> 77.2%</li>
+										<li><strong>Recall:</strong> 75.6%</li>
+										<li><strong>F1-Score:</strong> 76.4%</li>
+										<li><strong>ROC-AUC:</strong> 0.798</li>
+									</ul>
+								</div>
+								<div class="col-lg-8">
+									<h6 class="mb-3">Visualizations</h6>
+									<div class="row g-3">
+										<div class="col-md-6">
+											<div class="mb-2 fw-semibold">Confusion Matrix</div>
+											<div class="visual-box confusion-matrix-container">
+												<div class="cm-grid">
+													<div class="cm-box tn"><span class="cm-label">TN</span><span class="cm-value">400</span></div>
+													<div class="cm-box fp"><span class="cm-label">FP</span><span class="cm-value">70</span></div>
+													<div class="cm-box fn"><span class="cm-label">FN</span><span class="cm-value">90</span></div>
+													<div class="cm-box tp"><span class="cm-label">TP</span><span class="cm-value">208</span></div>
+												</div>
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="mb-2 fw-semibold">ROC Curve</div>
+											<div class="visual-box roc-curve-container"><canvas id="svmRocFull"></canvas></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			<!-- Logistic Regression Analysis -->
+			<div class="row mb-5">
+				<div class="col-12">
+					<div class="card analysis-card theme-lr">
+						<div class="card-header"><strong>Logistic Regression</strong></div>
+						<div class="card-body">
+							<div class="row g-4 align-items-stretch">
+								<div class="col-lg-4">
+									<ul class="list-unstyled metrics-list mb-0">
+										<li><strong>Accuracy:</strong> 76.3%</li>
+										<li><strong>Precision:</strong> 74.1%</li>
+										<li><strong>Recall:</strong> 72.8%</li>
+										<li><strong>F1-Score:</strong> 73.4%</li>
+										<li><strong>ROC-AUC:</strong> 0.763</li>
+									</ul>
+								</div>
+								<div class="col-lg-8">
+									<h6 class="mb-3">Visualizations</h6>
+									<div class="row g-3">
+										<div class="col-md-6">
+											<div class="mb-2 fw-semibold">Confusion Matrix</div>
+											<div class="visual-box confusion-matrix-container">
+												<div class="cm-grid">
+													<div class="cm-box tn"><span class="cm-label">TN</span><span class="cm-value">390</span></div>
+													<div class="cm-box fp"><span class="cm-label">FP</span><span class="cm-value">80</span></div>
+													<div class="cm-box fn"><span class="cm-label">FN</span><span class="cm-value">100</span></div>
+													<div class="cm-box tp"><span class="cm-label">TP</span><span class="cm-value">198</span></div>
+												</div>
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="mb-2 fw-semibold">ROC Curve</div>
+											<div class="visual-box roc-curve-container"><canvas id="lrRocFull"></canvas></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			
+		<!-- Performance Insights -->
+		<div class="row mb-5">
+			<div class="col-12">
+				<h3 class="fw-bold mb-4">Performance Insights</h3>
+				<div class="row g-4">
+					<div class="col-md-6">
+					<div class="card h-100">
+							<div class="card-header bg-primary text-white">
+								<h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Best Performing Algorithm</h5>
+						</div>
+						<div class="card-body">
+								<p><strong>K-Nearest Neighbors (KNN)</strong> achieved the highest accuracy of 84.2% and is currently used in production.</p>
+								<ul class="mb-0">
+									<li>High precision (86.1%) - low false positive rate</li>
+									<li>Good recall (81.3%) - catches most diabetes cases</li>
+									<li>Balanced F1-score (83.6%)</li>
+									<li>ROC-AUC of 0.842 indicates good discriminative ability</li>
+								</ul>
+								</div>
+								</div>
+								</div>
+					<div class="col-md-6">
+					<div class="card h-100">
+						<div class="card-header bg-info text-white">
+								<h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Model Characteristics</h5>
+						</div>
+						<div class="card-body">
+								<p><strong>Instance-based learning</strong> approach that classifies based on similarity to training examples.</p>
+								<ul class="mb-0">
+									<li>Non-parametric method - no assumptions about data distribution</li>
+									<li>Simple to understand and implement</li>
+									<li>Effective for small to medium datasets</li>
+									<li>Robust to outliers and noise</li>
+								</ul>
+								</div>
+								</div>
+								</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Data Quality & Validation -->
+		<div class="row mb-5">
+			<div class="col-12">
+				<h3 class="fw-bold mb-4">Data Quality & Validation</h3>
+				<div class="row g-4">
+					<div class="col-md-4">
+						<div class="card text-center">
+						<div class="card-body">
+								<i class="fas fa-database text-primary fs-1 mb-3"></i>
+								<h5>Dataset Quality</h5>
+								<p class="text-muted">Pima Indians Diabetes Dataset - well-established benchmark dataset with 768 samples and 8 features</p>
+			</div>
+		</div>
+			</div>
+					<div class="col-md-4">
+						<div class="card text-center">
+						<div class="card-body">
+								<i class="fas fa-check-circle text-success fs-1 mb-3"></i>
+								<h5>Cross-Validation</h5>
+								<p class="text-muted">5-fold cross-validation used to ensure robust performance estimates and prevent overfitting</p>
+					</div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="card text-center">
+						<div class="card-body">
+								<i class="fas fa-balance-scale text-warning fs-1 mb-3"></i>
+								<h5>Class Balance</h5>
+								<p class="text-muted">Dataset has 65% negative cases and 35% positive cases - reasonable balance for diabetes prediction</p>
+				</div>
+			</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Model Limitations & Recommendations -->
+		<div class="row">
+			<div class="col-12">
+				<div class="alert alert-warning">
+					<h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Important Considerations</h5>
+					<div class="row">
+						<div class="col-md-6">
+							<h6>Model Limitations:</h6>
+							<ul class="mb-0">
+								<li>Accuracy of 84.2% means ~16% of predictions may be incorrect</li>
+								<li>Model trained on specific population (Pima Indians)</li>
+								<li>May not generalize well to all ethnic groups</li>
+								<li>Requires regular retraining with new data</li>
+							</ul>
+			</div>
+						<div class="col-md-6">
+							<h6>Recommendations:</h6>
+							<ul class="mb-0">
+								<li>Use predictions as screening tool, not diagnosis</li>
+								<li>Always consult healthcare professionals</li>
+								<li>Consider additional features for better accuracy</li>
+								<li>Implement model monitoring and drift detection</li>
+							</ul>
+					</div>
+					</div>
+				</div>
+			</div>
+					</div>
+
+	</div>
+</div>
+
+<!-- Prev/Next Controls -->
+<div class="side-controls" aria-hidden="false" aria-label="Slide controls">
+	<button type="button" class="side-btn" id="prevSlide" title="Previous">← Prev</button>
+	<div class="auto-scroll-controls">
+		<button type="button" class="auto-scroll-btn" id="playPauseBtn" title="Play/Pause Auto-scroll">⏸️</button>
+		<div class="progress-indicator">
+			<div class="progress-dot active" data-slide="0"></div>
+			<div class="progress-dot" data-slide="1"></div>
+			<div class="progress-dot" data-slide="2"></div>
+			<div class="progress-dot" data-slide="3"></div>
+		</div>
+	</div>
+	<button type="button" class="side-btn" id="nextSlide" title="Next">Next →</button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+	(function(){
+		const container = document.getElementById('snapx');
+		const prev = document.getElementById('prevSlide');
+		const next = document.getElementById('nextSlide');
+		const playPauseBtn = document.getElementById('playPauseBtn');
+		const progressDots = document.querySelectorAll('.progress-dot');
+		
+		let currentSlide = 0;
+		const totalSlides = 4;
+		let autoScrollInterval;
+		let isAutoScrolling = true;
+		let isAutoScrollEnabled = true;
+		
+		function updateProgressIndicator() {
+			progressDots.forEach((dot, index) => {
+				dot.classList.toggle('active', index === currentSlide);
+			});
+		}
+		
+		function updatePlayPauseButton() {
+			playPauseBtn.textContent = isAutoScrollEnabled ? '⏸️' : '▶️';
+			playPauseBtn.title = isAutoScrollEnabled ? 'Pause Auto-scroll' : 'Play Auto-scroll';
+		}
+		
+		function scrollByPage(dir){
+			const amount = window.innerWidth * (dir > 0 ? 1 : -1);
+			container.scrollBy({ left: amount, behavior: 'smooth' });
+		}
+		
+		function goToSlide(slideIndex) {
+			const targetScroll = slideIndex * window.innerWidth;
+			container.scrollTo({ left: targetScroll, behavior: 'smooth' });
+			currentSlide = slideIndex;
+			updateProgressIndicator();
+		}
+		
+		function nextSlide() {
+			currentSlide = (currentSlide + 1) % totalSlides;
+			goToSlide(currentSlide);
+		}
+		
+		function startAutoScroll() {
+			if (autoScrollInterval) clearInterval(autoScrollInterval);
+			autoScrollInterval = setInterval(() => {
+				if (isAutoScrolling && isAutoScrollEnabled) {
+					nextSlide();
+				}
+			}, 4000); // Auto-scroll every 4 seconds
+		}
+		
+		function pauseAutoScroll() {
+			isAutoScrolling = false;
+			setTimeout(() => {
+				isAutoScrolling = true;
+			}, 10000); // Resume after 10 seconds of inactivity
+		}
+		
+		function toggleAutoScroll() {
+			isAutoScrollEnabled = !isAutoScrollEnabled;
+			updatePlayPauseButton();
+			if (!isAutoScrollEnabled) {
+				clearInterval(autoScrollInterval);
+			} else {
+				startAutoScroll();
+			}
+		}
+		
+		// Manual navigation
+		prev.addEventListener('click', () => {
+			pauseAutoScroll();
+			currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+			goToSlide(currentSlide);
+		});
+		
+		next.addEventListener('click', () => {
+			pauseAutoScroll();
+			nextSlide();
+		});
+		
+		// Play/Pause button
+		playPauseBtn.addEventListener('click', toggleAutoScroll);
+		
+		// Progress dot navigation
+		progressDots.forEach((dot, index) => {
+			dot.addEventListener('click', () => {
+				pauseAutoScroll();
+				goToSlide(index);
+			});
+			dot.style.cursor = 'pointer';
+		});
+		
+		// Keyboard arrows support
+		window.addEventListener('keydown', (e) => {
+			const target = e.target;
+			const tag = target && target.tagName ? target.tagName.toLowerCase() : '';
+			const isTyping = tag === 'input' || tag === 'textarea' || (target && target.isContentEditable);
+			if (isTyping) { return; }
+			if (e.key === 'ArrowRight') {
+				pauseAutoScroll();
+				nextSlide();
+			}
+			if (e.key === 'ArrowLeft') {
+				pauseAutoScroll();
+				currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+				goToSlide(currentSlide);
+			}
+			if (e.key === ' ') { // Spacebar to toggle auto-scroll
+				e.preventDefault();
+				toggleAutoScroll();
+			}
+		});
+		
+		// Optional: Pause auto-scroll on mouse hover (can be removed for continuous scrolling)
+		// container.addEventListener('mouseenter', () => {
+		// 	isAutoScrolling = false;
+		// });
+		
+		// container.addEventListener('mouseleave', () => {
+		// 	isAutoScrolling = true;
+		// });
+		
+		// Track scroll position to update current slide
+		container.addEventListener('scroll', () => {
+			const scrollLeft = container.scrollLeft;
+			const slideWidth = window.innerWidth;
+			const newSlide = Math.round(scrollLeft / slideWidth);
+			if (newSlide !== currentSlide && newSlide >= 0 && newSlide < totalSlides) {
+				currentSlide = newSlide;
+				updateProgressIndicator();
+			}
+		});
+		
+		// Initialize - start immediately without waiting
+		updateProgressIndicator();
+		updatePlayPauseButton();
+		
+		// Start auto-scrolling immediately when page loads
+		setTimeout(() => {
+			startAutoScroll();
+		}, 1000); // Start after 1 second delay for smooth loading
+		
+	})();
+
+	// Performance Analysis Section Navigation
+	(function() {
+		// Toggle visibility of performance analysis only when requested
+		const perf = document.getElementById('performanceAnalysisSection');
+		console.log('Performance section element:', perf);
+		
+		function showPerformance() {
+			console.log('Showing performance analysis');
+			if (!perf) {
+				console.error('Performance section not found!');
+				return;
+			}
+			perf.classList.add('show-performance');
+			perf.style.display = 'block'; // Force display as backup
+			// Small delay to ensure element is visible before scrolling
+			setTimeout(() => {
+				perf.scrollIntoView({ behavior: 'smooth' });
+			}, 100);
+		}
+		function hidePerformance() {
+			console.log('Hiding performance analysis');
+			if (!perf) return;
+			perf.classList.remove('show-performance');
+			perf.style.display = 'none'; // Force hide as backup
+		}
+		function handlePerformanceNavigation() {
+			console.log('Current hash:', window.location.hash);
+			if (window.location.hash === '#performanceAnalysisSection') {
+				showPerformance();
+			} else {
+				hidePerformance();
+			}
+		}
+		
+		// Check on page load (handles direct navigation from navbar)
+		document.addEventListener('DOMContentLoaded', function() {
+			console.log('DOM loaded, checking performance navigation');
+			handlePerformanceNavigation();
+		});
+		
+		// Respond to hash changes
+		window.addEventListener('hashchange', handlePerformanceNavigation);
+		
+		// Handle clicks on performance analysis links
+		document.addEventListener('click', function(e) {
+			const link = e.target.closest('a[href*="#performanceAnalysisSection"]');
+			if (link) {
+				console.log('Performance analysis link clicked');
+				e.preventDefault();
+				showPerformance();
+				// Update URL hash
+				window.history.pushState(null, null, '#performanceAnalysisSection');
+			}
+		});
+	})();
+	
+	
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+	document.addEventListener('DOMContentLoaded', function(){
+		function createRocChart(canvasId, label, points, auc, color){
+			const el = document.getElementById(canvasId);
+			if(!el){ return; }
+			const ctx = el.getContext('2d');
+			new Chart(ctx, {
+				type: 'line',
+				data: {
+					labels: points.map(p=>p[0]),
+					datasets: [
+						{ label: label, data: points.map(p=>({x:p[0], y:p[1]})), parsing:false, borderColor: color, backgroundColor: color.replace(')',',0.15)').replace('rgb','rgba'), fill: true, tension: 0.25 },
+						{ label: 'Random Guess', data: [{x:0,y:0},{x:1,y:1}], parsing:false, borderColor: '#6c757d', borderDash:[6,6], pointRadius:0 }
+					]
+				},
+				options: {
+					responsive: true,
+					plugins: { legend: { position: 'bottom' }, title: { display: true, text: `AUC: ${auc}` } },
+					scales: { x: { type: 'linear', min:0, max:1, title:{display:true, text:'False Positive Rate'} }, y:{ min:0, max:1, title:{display:true, text:'True Positive Rate'} } }
+				}
+			});
+		}
+
+		// Tabs charts
+		createRocChart('knnRoc', 'KNN', [ [0,0], [0.05,0.62], [0.1,0.78], [0.2,0.86], [0.35,0.91], [1,1] ], '0.842', 'rgb(13,110,253)');
+		createRocChart('rfRoc', 'Random Forest', [ [0,0], [0.06,0.58], [0.12,0.74], [0.22,0.82], [0.38,0.88], [1,1] ], '0.821', 'rgb(25,135,84)');
+		createRocChart('svmRoc', 'SVM', [ [0,0], [0.08,0.54], [0.15,0.69], [0.28,0.78], [0.45,0.84], [1,1] ], '0.798', 'rgb(111,66,193)');
+		createRocChart('lrRoc', 'Logistic Regression', [ [0,0], [0.1,0.5], [0.2,0.64], [0.33,0.73], [0.5,0.8], [1,1] ], '0.763', 'rgb(253,126,20)');
+
+		// All cards charts
+		createRocChart('knnRocAll', 'KNN', [ [0,0], [0.05,0.62], [0.1,0.78], [0.2,0.86], [0.35,0.91], [1,1] ], '0.842', 'rgb(13,110,253)');
+		createRocChart('rfRocAll', 'Random Forest', [ [0,0], [0.06,0.58], [0.12,0.74], [0.22,0.82], [0.38,0.88], [1,1] ], '0.821', 'rgb(25,135,84)');
+		createRocChart('svmRocAll', 'SVM', [ [0,0], [0.08,0.54], [0.15,0.69], [0.28,0.78], [0.45,0.84], [1,1] ], '0.798', 'rgb(111,66,193)');
+		createRocChart('lrRocAll', 'Logistic Regression', [ [0,0], [0.1,0.5], [0.2,0.64], [0.33,0.73], [0.5,0.8], [1,1] ], '0.763', 'rgb(253,126,20)');
+
+		// Full sections charts
+		createRocChart('knnRocFull', 'KNN', [ [0,0], [0.05,0.62], [0.1,0.78], [0.2,0.86], [0.35,0.91], [1,1] ], '0.842', 'rgb(13,110,253)');
+		createRocChart('rfRocFull', 'Random Forest', [ [0,0], [0.06,0.58], [0.12,0.74], [0.22,0.82], [0.38,0.88], [1,1] ], '0.821', 'rgb(25,135,84)');
+		createRocChart('svmRocFull', 'SVM', [ [0,0], [0.08,0.54], [0.15,0.69], [0.28,0.78], [0.45,0.84], [1,1] ], '0.798', 'rgb(111,66,193)');
+		createRocChart('lrRocFull', 'Logistic Regression', [ [0,0], [0.1,0.5], [0.2,0.64], [0.33,0.73], [0.5,0.8], [1,1] ], '0.763', 'rgb(253,126,20)');
+	});
+</script>
+
+{% endblock %}
+

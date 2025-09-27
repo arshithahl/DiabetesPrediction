@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Diabetes Prediction System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, #f2f6ff 0%, #f8fbff 100%);
+        position: relative;
+    }
+    .login-container::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(rgba(79,70,229,0.06) 1px, transparent 1px);
+        background-size: 20px 20px;
+        pointer-events: none;
+    }
+    .login-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+        padding: 40px;
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+    }
+    .login-title {
+        text-align: center;
+        color: #1f2937;
+        margin-bottom: 30px;
+        font-weight: 700;
+    }
+    .form-control {
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+        padding: 12px 15px;
+        margin-bottom: 20px;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        background: #f9fafb;
+    }
+    .form-control:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
+        background: #fff;
+    }
+    .btn-login {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        color: white;
+        font-weight: 600;
+        width: 100%;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 10px 20px rgba(99,102,241,0.25);
+    }
+    .btn-login:hover {
+        transform: translateY(-2px);
+        color: white;
+        box-shadow: 0 14px 28px rgba(99,102,241,0.32);
+    }
+    .register-link {
+        text-align: center;
+        margin-top: 20px;
+        color: #6b7280;
+    }
+    .register-link a {
+        color: #6366f1;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .register-link a:hover {
+        text-decoration: underline;
+    }
+    .message {
+        margin-bottom: 20px;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+    }
+    .message.error {
+        background-color: #fde2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+    .message.success {
+        background-color: #dcfce7;
+        color: #065f46;
+        border: 1px solid #bbf7d0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <h2 class="login-title">Login</h2>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <input type="text" name="username" class="form-control" placeholder="Username" required>
+            </div>
+            <div class="mb-3">
+                <input type="password" name="password" class="form-control" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn btn-login">Login</button>
+        </form>
+        <div class="register-link">
+            <p>Don't have an account? <a href="{% url 'register' %}">Register here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

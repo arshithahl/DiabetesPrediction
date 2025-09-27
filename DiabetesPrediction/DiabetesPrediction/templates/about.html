@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}About - Diabetes Prediction System{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title text-center mb-4">About This Project</h1>
+                    <p class="card-text">
+                        This Diabetes Prediction System is an advanced machine learning application designed to help users 
+                        assess their risk of developing diabetes. Our system analyzes various health parameters to provide 
+                        accurate predictions and early warnings.
+                    </p>
+                    
+                    <h3 class="mt-4">How It Works</h3>
+                    <p class="card-text">
+                        Our system uses a trained machine learning model that analyzes several key health indicators:
+                    </p>
+                    <ul class="list-group list-group-flush mb-3">
+                        <li class="list-group-item">Pregnancies - Number of times pregnant</li>
+                        <li class="list-group-item">Glucose - Plasma glucose concentration</li>
+                        <li class="list-group-item">Blood Pressure - Diastolic blood pressure</li>
+                        <li class="list-group-item">Skin Thickness - Triceps skin fold thickness</li>
+                        <li class="list-group-item">Insulin - 2-Hour serum insulin</li>
+                        <li class="list-group-item">BMI - Body mass index</li>
+                        <li class="list-group-item">Diabetes Pedigree Function - Family history</li>
+                        <li class="list-group-item">Age - Age in years</li>
+                    </ul>
+                    
+                    <h3 class="mt-4">Technology</h3>
+                    <p class="card-text">
+                        Built with Django framework and powered by machine learning algorithms, this system provides 
+                        a user-friendly interface for diabetes risk assessment. The model has been trained on extensive 
+                        medical datasets to ensure accuracy and reliability.
+                    </p>
+                    
+                    <h3 class="mt-4">Disclaimer</h3>
+                    <p class="card-text text-muted">
+                        This system is designed for educational and informational purposes only. It should not replace 
+                        professional medical advice, diagnosis, or treatment. Always consult with qualified healthcare 
+                        providers for medical concerns.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
